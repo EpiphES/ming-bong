@@ -6,7 +6,10 @@ const intro = `Мини-игра ***Минг Бонг***.
 
 let roundCount = 0;
 let health = 50;
-const log = [];
+let winnerAnnounce = `Монстр не побеждён, но ему так и не удалось захватить мир.`;
+const healthLog = [50];
+const healLog = [0];
+const damageLog = [0];
 
 confirm(intro)
   ? playGame()
@@ -21,71 +24,68 @@ function playGame() {
 
 Затем борцы с монстрами поливают Минг Бонга из антимонстропушкаруса, и это отнимает у него здоровье.
 `);
+
   startRound();
 
   finishGame();
 }
 
 function startRound() {
-  let remedyInput = "";
-  let remedy = 0;
+  let healInput = "";
+  let heal = 0;
   let damageInput = "";
   let damage = 0;
-  let consent = true;
-  while (consent) {
+  do {
     roundCount += 1;
     alert(`
 ${roundCount} раунд.
 
 Здоровье монстра: ${health}.`);
-    log.push(new Object());
-    const logIndex = roundCount - 1;
-    log[logIndex].startHealth = health;
 
-    remedyInput = prompt(
-      `Злая колдунья Сардулья поит Минг Бонга магическим целительным зельем.
+    getHeal();
 
-Введите количество очков здоровья, которое получит монстр.`,
-      "0"
-    );
-    remedy = checkInput(remedyInput);
-    health += remedy;
-    log[logIndex].remedy = remedy;
-    log[logIndex].totalHealth = health;
-    log[logIndex].damage = 0;
+    if (health > 100) {
+      winnerAnnounce = `Увы! Вы проиграли! Минг Бонг поработил мир!`;
+      break;
+    }
 
-    if (!checkHealth(health)) break;
+    getDamage();
 
-    damageInput = prompt(
-      `Храбрые борцы с монстрами поливают Минг Бонга из антимонстропушкаруса.
-    
-Введите количество урона, нанесенного монстру`,
-      "0"
-    );
-    damage = checkInput(damageInput);
-    health -= damage;
-    log[logIndex].totalHealth = health;
-    log[logIndex].damage = damage;
+    if (health < 0) {
+      winnerAnnounce = `Позравляю, вы выйграли! Монстр повержен! Злая колдунья за решёткой!`;
+      break;
+    }
+  } while (
+    confirm(`Здоровье монстра: ${health}.
 
-    if (!checkHealth(health)) break;
-
-    consent = confirm(`Здоровье монстра: ${health}.
-
-Продолжить игру?`);
-    if (!consent) exitGame();
-  }
+Продолжить игру?`)
+  );
 }
 
-function checkHealth(value) {
-  if (value > 100) {
-    loseGame();
-    return false;
-  }
-  if (value < 0) {
-    winGame();
-    return false;
-  }
-  return true;
+function getHeal() {
+  healInput = prompt(
+    `Злая колдунья Сардулья поит Минг Бонга магическим целительным зельем.
+
+Введите количество очков здоровья, которое получит монстр.`,
+    "0"
+  );
+  heal = checkInput(healInput);
+  health += heal;
+  healLog.push(heal);
+  healthLog.push(health);
+}
+
+function getDamage() {
+  damageInput = prompt(
+    `Храбрые борцы с монстрами поливают Минг Бонга из антимонстропушкаруса.
+    
+Введите количество урона, нанесенного монстру`,
+    "0"
+  );
+  damage = checkInput(damageInput);
+  health -= damage;
+  damageLog.push(damage);
+  healthLog.push(health);
 }
 
 function checkInput(input) {
@@ -97,46 +97,20 @@ function checkInput(input) {
   return +input;
 }
 
-function exitGame() {
-  alert(`Монстр не побеждён, но ему так и не удалось захватить мир.
+function getResult() {
+  alert(`${winnerAnnounce}
 
-${makeLog(log)}`);
-}
+Статистика игры:
 
-function loseGame() {
-  alert(`Увы! Вы проиграли! Минг Бонг поработил мир!
-  
-${makeLog(log)}`);
-}
-
-function winGame() {
-  alert(`Позравляю, вы выйграли! Монстр повержен! Злая колдунья за решёткой!
-
-${makeLog(log)}`);
-}
-
-function makeLog(arr) {
-  return arr.reduce(
-    (text, item, index) => {
-      return (
-        text +
-        `Раунд ${index + 1}.
-Зелье: ${item.remedy}.
-Урон: ${item.damage}.
-Здоровье монстра в конце раунда: ${item.totalHealth}.
-
-`
-      );
-    },
-    `Ваша статистика:
-
-Здоровье монстра в начале игры: 50;
-
-`
-  );
+Количество раундов: ${roundCount}.
+Максимальный урон: ${Math.max(...damageLog)}.
+Максимальное восстановление здоровья: ${Math.max(...healLog)}.
+Минимум здоровья монстра: ${Math.min(...healthLog)}
+Максимум здоровья монстра: ${Math.max(...healthLog)}`);
 }
 
 function finishGame() {
+  getResult();
   alert(`Игра окончена!
   
 Если хотите сыграть еще раз, просто обновите страницу!`);
